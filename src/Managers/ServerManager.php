@@ -1,109 +1,233 @@
 <?php
 
-namespace HCGCloud\Pterodactyl\Managers\Server;
+namespace HCGCloud\Pterodactyl\Managers;
 
-use HCGCloud\Pterodactyl\Managers\Manager;
 use HCGCloud\Pterodactyl\Resources\Collection;
-use HCGCloud\Pterodactyl\Resources\ServerFiles;
+use HCGCloud\Pterodactyl\Resources\Server;
+use HCGCloud\Pterodactyl\Resources\Stats;
 
-class ServerFilesManager extends Manager
+class ServerManager extends Manager
 {
     /**
-     * Get a list of existing directorys in server files.
+     * Get a paginated collection of servers.
      *
-     * @param mixed $serverId
+     * @param int   $page
      * @param array $query
      *
      * @return Collection
      */
-    public function list($serverId, $directory = "/", array $query = [])
+    public function paginate(int $page = 1, array $query = [])
     {
-        return $this->http->get("servers/$serverId/files/list", array_merge([
-            'directory' => $directory,
-        ], $query));
+        switch ($this->apiType) {
+            case 'application':
+                return $this->http->get('servers', array_merge([
+                    'page' => $page,
+                ], $query));
+                break;
+            case 'client':
+                return $this->http->get('', array_merge([
+                    'page' => $page,
+                ], $query));
+                break;
+        }
     }
 
     /**
-     * Get contents of a specific file.
+     * Get a server instance by id.
      *
      * @param mixed $serverId
-     * @param string $filePath
      * @param array $query
      *
-     * @return ServerFile
+     * @return Server
      */
-    public function contentsOfFile($serverId, $filePath, array $query = [])
+    public function get($serverId, array $query = [])
     {
-        return $this->http->get("servers/$serverId/files/contents", array_merge([
-            'file' => $filePath,
-        ], $query));
+        return $this->http->get("servers/$serverId", $query);
     }
 
     /**
-     * Download a file (returns an direct url with token).
+     * Get a server instance by external id.
      *
-     * @param mixed $serverId
-     * @param string $filePath
+     * @param string $externalId
      * @param array $query
      *
-     * @return ServerFile
+     * @return Server
      */
-    public function downloadFile($serverId, $filePath, array $query = [])
+    public function getByExternalId(string $externalId, array $query = [])
     {
-        return $this->http->get("servers/$serverId/files/download", array_merge([
-            'file' => $filePath,
-        ], $query));
+        return $this->http->get("servers/external/$externalId", $query);
     }
 
     /**
-     * Rename a file.
+     * Create a new server.
      *
-     * @param mixed $serverId
-     * @param string $oldName
-     * @param string $newName
-     * @param array $query
+     * @param array $data
      *
-     * @return ServerFile
+     * @return Server
      */
-    public function renameFile($serverId, $folder, $oldName, $newName, array $query = [])
+    public function create(array $data)
     {
-        return $this->http->put("servers/$serverId/files/rename", null, array("root" => $folder ?? "/", "files" => array("from" => $oldName, "to" => $newName)));
+        return $this->http->post('servers', [], $data);
     }
-
-    public function getFileUploadData($serverId) {
-        return $this->http->get("servers/$serverId/files/upload");
-    }
-    /**
-     * Write content to a file.
-     *
-     * @param mixed $serverId
-     * @param string $filePath
-     * @param array $fileContent
-     * @param array $query
-     *
-     * @return ServerFile
-     */
-    public function writeDataToFile($serverId, $filePath, $fileContent, array $query = [])
-    {
-        return $this->http->put("servers/$serverId/files/write", array_merge([
-            'file' => $filePath,
-        ], $query), $fileContent);
-    }
-
 
     /**
-     * Delete a file.
+     * Update details of a specified server.
      *
-     * @param mixed $serverId
-     * @param string $folder
-     * @param array $files
+     * @param int   $serverId
+     * @param array $data
      *
-     * @return ServerFile
+     * @return void
      */
-    public function deleteFile($serverId, $folder, $files)
+    public function updateDetails(int $serverId, array $data)
     {
-        return $this->http->put("servers/$serverId/files/delete", null, array("root" => $folder ?? "/", "files" => $files));
+        return $this->http->patch("servers/$serverId/details", [], $data);
     }
 
+    /**
+     * Update build of a specified server.
+     *
+     * @param int   $serverId
+     * @param array $data
+     *
+     * @return void
+     */
+    public function updateBuild(int $serverId, array $data)
+    {
+        return $this->http->patch("servers/$serverId/build", [], $data);
+    }
 
+    /**
+     * Update startup of a specified server.
+     *
+     * @param int   $serverId
+     * @param array $data
+     *
+     * @return void
+     */
+    public function updateStartup(int $serverId, array $data)
+    {
+        return $this->http->patch("servers/$serverId/startup", [], $data);
+    }
+
+    /**
+     * Suspend a specified server.
+     *
+     * @param int $serverId
+     *
+     * @return void
+     */
+    public function suspend(int $serverId)
+    {
+        return $this->http->post("servers/$serverId/suspend");
+    }
+
+    /**
+     * Unsuspend a specified server.
+     *
+     * @param int $serverId
+     *
+     * @return void
+     */
+    public function unsuspend(int $serverId)
+    {
+        return $this->http->post("servers/$serverId/unsuspend");
+    }
+
+    /**
+     * Reinstall a specified server.
+     *
+     * @param int $serverId
+     *
+     * @return void
+     */
+    public function reinstall(int $serverId)
+    {
+        return $this->http->post("servers/$serverId/reinstall");
+    }
+
+    /**
+     * Delete the given server.
+     *
+     * @param int $serverId
+     *
+     * @return void
+     */
+    public function delete(int $serverId)
+    {
+        return $this->http->delete("servers/$serverId");
+    }
+
+    /**
+     * Force delete the given server.
+     *
+     * @param int $serverId
+     *
+     * @return void
+     */
+    public function forceDelete(int $serverId)
+    {
+        return $this->http->delete("servers/$serverId/force");
+    }
+
+    /**
+     * Get information for websocket console of a specified server.
+     *
+     * @param string $serverId
+     *
+     * @return array
+     */
+    public function websocket(string $serverId)
+    {
+        return $this->http->get("servers/$serverId/websocket");
+    }
+
+    /**
+     * Get resource utilization of a specified server.
+     *
+     * @param string $serverId
+     *
+     * @return Stats
+     */
+    public function resources(string $serverId)
+    {
+        return $this->http->get("servers/$serverId/resources");
+    }
+
+    /**
+     * Send a command to a specified server.
+     *
+     * @param string $serverId
+     * @param string $command
+     *
+     * @return array
+     */
+    public function command(string $serverId, string $command)
+    {
+        return $this->http->post("servers/$serverId/command", [], ['command' => $command]);
+    }
+
+    /**
+     * Send a power signal to a specified server.
+     *
+     * @param string $serverId
+     * @param string $signal
+     *
+     * @return array
+     */
+    public function power(string $serverId, string $signal)
+    {
+        return $this->http->post("servers/$serverId/power", [], ['signal' => $signal]);
+    }
+
+    /**
+     * Backup a server
+     *
+     * @param string $serverId
+     *
+     * @return array
+     */
+    public function backup(string $serverId)
+    {
+        return $this->http->post("servers/$serverId/backups");
+    }
 }
