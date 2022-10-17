@@ -117,7 +117,7 @@ class ServerManager extends Manager
      *
      * @return void
      */
-    public function getStartup(int $serverId)
+    public function getStartup(string $serverId)
     {
         return $this->http->get("servers/$serverId/startup");
     }
