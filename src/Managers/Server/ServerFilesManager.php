@@ -18,7 +18,7 @@ class ServerFilesManager extends Manager
      */
     public function list($serverId, array $query = [])
     {
-        return $this->http->get("servers/$serverId/list", $query);
+        return $this->http->get("servers/$serverId/files/list", $query);
     }
 
     /**
