@@ -1,246 +1,109 @@
 <?php
 
-namespace HCGCloud\Pterodactyl\Managers;
+namespace HCGCloud\Pterodactyl\Managers\Server;
 
+use HCGCloud\Pterodactyl\Managers\Manager;
 use HCGCloud\Pterodactyl\Resources\Collection;
-use HCGCloud\Pterodactyl\Resources\Server;
-use HCGCloud\Pterodactyl\Resources\Stats;
+use HCGCloud\Pterodactyl\Resources\ServerFiles;
 
-class ServerManager extends Manager
+class ServerFilesManager extends Manager
 {
     /**
-     * Get a paginated collection of servers.
-     *
-     * @param int   $page
-     * @param array $query
-     *
-     * @return Collection
-     */
-    public function paginate(int $page = 1, array $query = [])
-    {
-        switch ($this->apiType) {
-            case 'application':
-                return $this->http->get('servers', array_merge([
-                    'page' => $page,
-                ], $query));
-            break;
-            case 'client':
-                return $this->http->get('', array_merge([
-                    'page' => $page,
-                ], $query));
-            break;
-        }
-    }
-
-    /**
-     * Get a server instance by id.
+     * Get a list of existing directorys in server files.
      *
      * @param mixed $serverId
      * @param array $query
      *
-     * @return Server
+     * @return Collection
      */
-    public function get($serverId, array $query = [])
+    public function list($serverId, $directory = "/", array $query = [])
     {
-        return $this->http->get("servers/$serverId", $query);
+        return $this->http->get("servers/$serverId/files/list", array_merge([
+            'directory' => $directory,
+        ], $query));
     }
 
     /**
-     * Get a server instance by external id.
+     * Get contents of a specific file.
      *
-     * @param string $externalId
+     * @param mixed $serverId
+     * @param string $filePath
      * @param array $query
      *
-     * @return Server
+     * @return ServerFile
      */
-    public function getByExternalId(string $externalId, array $query = [])
+    public function contentsOfFile($serverId, $filePath, array $query = [])
     {
-        return $this->http->get("servers/external/$externalId", $query);
+        return $this->http->get("servers/$serverId/files/contents", array_merge([
+            'file' => $filePath,
+        ], $query));
     }
 
     /**
-     * Create a new server.
+     * Download a file (returns an direct url with token).
      *
-     * @param array $data
+     * @param mixed $serverId
+     * @param string $filePath
+     * @param array $query
      *
-     * @return Server
+     * @return ServerFile
      */
-    public function create(array $data)
+    public function downloadFile($serverId, $filePath, array $query = [])
     {
-        return $this->http->post('servers', [], $data);
+        return $this->http->get("servers/$serverId/files/download", array_merge([
+            'file' => $filePath,
+        ], $query));
     }
 
     /**
-     * Update details of a specified server.
+     * Rename a file.
      *
-     * @param int   $serverId
-     * @param array $data
+     * @param mixed $serverId
+     * @param string $oldName
+     * @param string $newName
+     * @param array $query
      *
-     * @return void
+     * @return ServerFile
      */
-    public function updateDetails(int $serverId, array $data)
+    public function renameFile($serverId, $folder, $oldName, $newName, array $query = [])
     {
-        return $this->http->patch("servers/$serverId/details", [], $data);
+        return $this->http->put("servers/$serverId/files/rename", null, array("root" => $folder ?? "/", "files" => array("from" => $oldName, "to" => $newName)));
     }
 
+    public function getFileUploadData($serverId) {
+        return $this->http->get("servers/$serverId/files/upload");
+    }
     /**
-     * Update build of a specified server.
+     * Write content to a file.
      *
-     * @param int   $serverId
-     * @param array $data
+     * @param mixed $serverId
+     * @param string $filePath
+     * @param array $fileContent
+     * @param array $query
      *
-     * @return void
+     * @return ServerFile
      */
-    public function updateBuild(int $serverId, array $data)
+    public function writeDataToFile($serverId, $filePath, $fileContent, array $query = [])
     {
-        return $this->http->patch("servers/$serverId/build", [], $data);
+        return $this->http->put("servers/$serverId/files/write", array_merge([
+            'file' => $filePath,
+        ], $query), $fileContent);
     }
 
-    /**
-     * Update startup of a specified server.
-     *
-     * @param int   $serverId
-     * @param array $data
-     *
-     * @return void
-     */
-    public function updateStartup(int $serverId, array $data)
-    {
-        return $this->http->patch("servers/$serverId/startup", [], $data);
-    }
 
     /**
-     * Get startup details of a specified server.
+     * Delete a file.
      *
-     * @param int   $serverId
-     * @param array $data
+     * @param mixed $serverId
+     * @param string $folder
+     * @param array $files
      *
-     * @return void
+     * @return ServerFile
      */
-    public function getStartup(string $serverId)
+    public function deleteFile($serverId, $folder, $files)
     {
-        return $this->http->get("servers/$serverId/startup");
+        return $this->http->put("servers/$serverId/files/delete", null, array("root" => $folder ?? "/", "files" => $files));
     }
 
-    /**
-     * Suspend a specified server.
-     *
-     * @param int $serverId
-     *
-     * @return void
-     */
-    public function suspend(int $serverId)
-    {
-        return $this->http->post("servers/$serverId/suspend");
-    }
 
-    /**
-     * Unsuspend a specified server.
-     *
-     * @param int $serverId
-     *
-     * @return void
-     */
-    public function unsuspend(int $serverId)
-    {
-        return $this->http->post("servers/$serverId/unsuspend");
-    }
-
-    /**
-     * Reinstall a specified server.
-     *
-     * @param int $serverId
-     *
-     * @return void
-     */
-    public function reinstall(int $serverId)
-    {
-        return $this->http->post("servers/$serverId/reinstall");
-    }
-
-    /**
-     * Delete the given server.
-     *
-     * @param int $serverId
-     *
-     * @return void
-     */
-    public function delete(int $serverId)
-    {
-        return $this->http->delete("servers/$serverId");
-    }
-
-    /**
-     * Force delete the given server.
-     *
-     * @param int $serverId
-     *
-     * @return void
-     */
-    public function forceDelete(int $serverId)
-    {
-        return $this->http->delete("servers/$serverId/force");
-    }
-
-    /**
-     * Get information for websocket console of a specified server.
-     *
-     * @param string $serverId
-     *
-     * @return array
-     */
-    public function websocket(string $serverId)
-    {
-        return $this->http->get("servers/$serverId/websocket");
-    }
-
-    /**
-     * Get resource utilization of a specified server.
-     *
-     * @param string $serverId
-     *
-     * @return Stats
-     */
-    public function resources(string $serverId)
-    {
-        return $this->http->get("servers/$serverId/resources");
-    }
-
-    /**
-     * Send a command to a specified server.
-     *
-     * @param string $serverId
-     * @param string $command
-     *
-     * @return array
-     */
-    public function command(string $serverId, string $command)
-    {
-        return $this->http->post("servers/$serverId/command", [], ['command' => $command]);
-    }
-
-    /**
-     * Send a power signal to a specified server.
-     *
-     * @param string $serverId
-     * @param string $signal
-     *
-     * @return array
-     */
-    public function power(string $serverId, string $signal)
-    {
-        return $this->http->post("servers/$serverId/power", [], ['signal' => $signal]);
-    }
-    
-     /**
-     * Backup a server
-     *
-     * @param string $serverId
-     *
-     * @return array
-     */
-    public function backup(string $serverId)
-    {
-        return $this->http->post("servers/$serverId/backups");
-    }
 }
