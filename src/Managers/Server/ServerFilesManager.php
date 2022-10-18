@@ -85,9 +85,9 @@ class ServerFilesManager extends Manager
      */
     public function writeDataToFile($serverId, $filePath, $fileContent, array $query = [])
     {
-        return $this->http->put("servers/$serverId/files/write", array_merge([
+        return $this->http->post("servers/$serverId/files/write", array_merge([
             'file' => $filePath,
-        ], $query), $fileContent);
+        ], $query), array(), $fileContent);
     }
 
 
@@ -116,6 +116,7 @@ class ServerFilesManager extends Manager
      */
     public function createFolder($serverId, $folder, $name)
     {
+
         return $this->http->post("servers/$serverId/files/create-folder", [], array("root" => $folder ?? "/", "name" => $name));
     }
 

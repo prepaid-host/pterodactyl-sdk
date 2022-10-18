@@ -97,9 +97,9 @@ class Http
      *
      * @return mixed
      */
-    public function post($uri, array $query = [], array $payload = [])
+    public function post($uri, array $query = [], array $payload = [], $stringPayload = null)
     {
-        return $this->request('POST', $uri, $query, $payload);
+        return $this->request('POST', $uri, $query, $payload, $stringPayload);
     }
 
     /**
@@ -154,19 +154,17 @@ class Http
      *
      * @return mixed
      */
-    public function request($method, $uri, array $query = [], array $payload = [])
+    public function request($method, $uri, array $query = [], array $payload = [], string $stringPayload = null)
     {
         $uri = $this->baseUri.'/api/'.$this->apiType.'/'.$uri;
-
-        $body = json_encode($payload);
-
+        $body = $stringPayload ? $stringPayload : json_encode($payload);
         $token = $this->apiKey;
 
         $options['query'] = $query;
         $options['body'] = $body;
         $options['debug'] = false;
         $options['headers']['Authorization'] = 'Bearer '.$token;
-
+        if ($stringPayload)  $options['headers']['Content-Type'] = 'text/plain';
         $response = $this->guzzle->request($method, $uri, $options);
 
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 204 && $response->getStatusCode() != 201) {
@@ -174,7 +172,6 @@ class Http
         }
 
         $responseBody = (string) $response->getBody();
-
         return $this->transform(json_decode($responseBody, true)) ?: $responseBody;
     }
 
@@ -199,7 +196,7 @@ class Http
 
                 // Rename to use the collection resource.
                 $response['object'] = 'collection';
-            break;
+                break;
         }
 
         if (isset($response['attributes']['relationships'])) {
