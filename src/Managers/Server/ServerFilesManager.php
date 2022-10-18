@@ -114,9 +114,9 @@ class ServerFilesManager extends Manager
      *
      * @return ServerFile
      */
-    public function createFolder($serverId, $folder, $files)
+    public function createFolder($serverId, $folder, $name)
     {
-        return $this->http->post("servers/$serverId/files/create-folder", [], array("root" => $folder ?? "/", "files" => $files));
+        return $this->http->post("servers/$serverId/files/create-folder", [], array("root" => $folder ?? "/", "name" => $name));
     }
 
 
