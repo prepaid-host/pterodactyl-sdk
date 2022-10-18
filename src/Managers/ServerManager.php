@@ -112,14 +112,14 @@ class ServerManager extends Manager
     /**
      * Get startup details of a specified server.
      *
-     * @param int   $serverId
+     * @param string   $serverId
      * @param array $data
      *
      * @return void
      */
-    public function getStartup(int $serverId, array $data)
+    public function getStartup(string $serverId)
     {
-        return $this->http->get("servers/$serverId/startup", [], $data);
+        return $this->http->get("servers/$serverId/startup");
     }
 
     /**
