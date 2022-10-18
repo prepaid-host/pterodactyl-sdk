@@ -102,7 +102,7 @@ class ServerFilesManager extends Manager
      */
     public function deleteFile($serverId, $folder, $files)
     {
-        return $this->http->put("servers/$serverId/files/delete", null, array("root" => $folder ?? "/", "files" => $files));
+        return $this->http->put("servers/$serverId/files/delete", [], array("root" => $folder ?? "/", "files" => $files));
     }
 
 
