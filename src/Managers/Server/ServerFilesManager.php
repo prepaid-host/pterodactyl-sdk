@@ -105,5 +105,19 @@ class ServerFilesManager extends Manager
         return $this->http->post("servers/$serverId/files/delete", [], array("root" => $folder ?? "/", "files" => $files));
     }
 
+    /**
+     * Create a folder.
+     *
+     * @param mixed $serverId
+     * @param string $folder
+     * @param array $files
+     *
+     * @return ServerFile
+     */
+    public function createFolder($serverId, $folder, $files)
+    {
+        return $this->http->post("servers/$serverId/files/create-folder", [], array("root" => $folder ?? "/", "files" => $files));
+    }
+
 
 }
