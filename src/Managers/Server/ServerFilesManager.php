@@ -67,12 +67,20 @@ class ServerFilesManager extends Manager
      */
     public function renameFile($serverId, $folder, $oldName, $newName, array $query = [])
     {
-        return $this->http->put("servers/$serverId/files/rename", null, array("root" => $folder ?? "/", "files" => array("from" => $oldName, "to" => $newName)));
+        return $this->http->put("servers/$serverId/files/rename", [], array("root" => $folder ?? "/", "files" => array(array("from" => $oldName, "to" => $newName))));
     }
 
+    /**
+     * Retrieve url to upload a file to root directory.
+     *
+     * @param mixed $serverId
+     *
+     * @return ServerFile
+     */
     public function getFileUploadData($serverId) {
         return $this->http->get("servers/$serverId/files/upload");
     }
+
     /**
      * Write content to a file.
      *
