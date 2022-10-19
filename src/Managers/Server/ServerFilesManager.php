@@ -12,6 +12,7 @@ class ServerFilesManager extends Manager
      * Get a list of existing directorys in server files.
      *
      * @param mixed $serverId
+     * @param string $directory
      * @param array $query
      *
      * @return Collection
@@ -40,7 +41,7 @@ class ServerFilesManager extends Manager
     }
 
     /**
-     * Download a file (returns an direct url with token).
+     * Download a file (returns a direct url with token).
      *
      * @param mixed $serverId
      * @param string $filePath
@@ -59,6 +60,7 @@ class ServerFilesManager extends Manager
      * Rename a file.
      *
      * @param mixed $serverId
+     * @param string $folder
      * @param string $oldName
      * @param string $newName
      * @param array $query
@@ -69,6 +71,23 @@ class ServerFilesManager extends Manager
     {
         return $this->http->put("servers/$serverId/files/rename", [], array("root" => $folder ?? "/", "files" => array(array("from" => $oldName, "to" => $newName))));
     }
+
+    /**
+     * Change permissions of a file.
+     *
+     * @param mixed $serverId
+     * @param string $folder
+     * @param string $file
+     * @param int $permissions
+     * @param array $query
+     *
+     * @return ServerFile
+     */
+    public function changeFilePermissions($serverId, $folder, $file, $permissions, array $query = [])
+    {
+        return $this->http->post("servers/$serverId/files/chmod", [], array("root" => $folder ?? "/", "files" => array(array("file" => $file, "mode" => $permissions))));
+    }
+
 
     /**
      * Retrieve url to upload a file to root directory.
@@ -86,7 +105,7 @@ class ServerFilesManager extends Manager
      *
      * @param mixed $serverId
      * @param string $filePath
-     * @param array $fileContent
+     * @param string $fileContent
      * @param array $query
      *
      * @return ServerFile
@@ -124,7 +143,6 @@ class ServerFilesManager extends Manager
      */
     public function createFolder($serverId, $folder, $name)
     {
-
         return $this->http->post("servers/$serverId/files/create-folder", [], array("root" => $folder ?? "/", "name" => $name));
     }
 
