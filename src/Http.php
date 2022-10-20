@@ -154,17 +154,17 @@ class Http
      *
      * @return mixed
      */
-    public function request($method, $uri, array $query = [], array $payload = [], string $stringPayload = null)
+    public function request($method, $uri, array $query = [], array $payload = [], string $plainTextPayload = null)
     {
         $uri = $this->baseUri.'/api/'.$this->apiType.'/'.$uri;
-        $body = $stringPayload ? $stringPayload : json_encode($payload);
+        $body = $plainTextPayload ? $plainTextPayload : json_encode($payload);
         $token = $this->apiKey;
 
         $options['query'] = $query;
         $options['body'] = $body;
         $options['debug'] = false;
         $options['headers']['Authorization'] = 'Bearer '.$token;
-        if ($stringPayload)  $options['headers']['Content-Type'] = 'text/plain';
+        if ($plainTextPayload)  $options['headers']['Content-Type'] = 'text/plain';
         $response = $this->guzzle->request($method, $uri, $options);
 
         if ($response->getStatusCode() != 200 && $response->getStatusCode() != 204 && $response->getStatusCode() != 201) {
