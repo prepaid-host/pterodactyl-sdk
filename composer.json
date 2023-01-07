@@ -1,5 +1,5 @@
 {
-    "name": "jeffwatsongh/pterodactyl-sdk",
+    "name": "prepaid-host/pterodactyl-sdk",
     "description": "Pterodactyl PHP SDK",
     "keywords": ["pterodactyl", "sdk", "php"],
     "license": "MIT",
